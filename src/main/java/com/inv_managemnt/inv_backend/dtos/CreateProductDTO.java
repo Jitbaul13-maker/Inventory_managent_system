@@ -17,7 +17,7 @@ public class CreateProductDTO {
     @NotBlank
     @Pattern(
             regexp = "^[A-Z0-9_-]+$",
-            message = "Invalid format(Only uppercase, digits and '-','_' is allowed)"
+            message = "Invalid format(Only uppercase, digits and '-', '_' is allowed)"
     )
     private String sku;
 
