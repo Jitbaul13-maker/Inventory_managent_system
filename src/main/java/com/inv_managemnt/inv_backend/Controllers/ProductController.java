@@ -19,7 +19,7 @@ public class ProductController {
 
     @GetMapping("/products/{pid}")
     public ResponseEntity<GetProductDTO> getProdById(@PathVariable int pid){
-        return ResponseEntity.status(HttpStatus.FOUND).body(service.getProdById(pid));
+        return ResponseEntity.ok(service.getProdById(pid));
     }
 
     @PostMapping("/products")

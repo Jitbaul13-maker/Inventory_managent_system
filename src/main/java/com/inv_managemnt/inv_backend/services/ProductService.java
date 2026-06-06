@@ -5,6 +5,7 @@ import com.inv_managemnt.inv_backend.dtos.GetProductDTO;
 import com.inv_managemnt.inv_backend.models.Product;
 import com.inv_managemnt.inv_backend.repos.ProductRepo;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,6 +18,10 @@ public class ProductService {
         this.repo = repo;
     }
 
+    @Cacheable(
+            value = "products",
+            key = "#pid"
+    )
     public GetProductDTO getProdById(int pid) {
         Product p = repo.findById(pid).orElseThrow();
 
