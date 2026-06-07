@@ -144,8 +144,8 @@ Example:
 ```text
 KEYS *
 
-v1:products:inventory:1
-v2:products:inventory:1
+products:inventory:json:1
+products:inventory:hash:1
 ```
 
 Image:
@@ -161,7 +161,7 @@ docs/screenshots/redis-keys.png
 Example:
 
 ```text
-GET v2:products:inventory:1
+GET products:inventory:hash:1
 ```
 
 Image:
@@ -318,7 +318,7 @@ Return
 Cache Key:
 
 ```text
-v2:products:inventory:{pid}
+products:inventory:json:{pid}
 ```
 
 ---
@@ -369,15 +369,15 @@ Return
 
 # Redis Design
 
-## Key Versioning
+## Key Separators
 
-Redis keys use version prefixes.
+Redis keys use data type based separators.
 
 Example:
 
 ```text
-v1:products:inventory:{pid}
-v2:products:inventory:{pid}
+products:inventory:json:{pid}
+products:inventory:hash:{pid}
 ```
 
 Benefits:
