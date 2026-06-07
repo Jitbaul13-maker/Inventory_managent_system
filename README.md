@@ -154,8 +154,8 @@ Example:
 
 | Scenario  | Avg Time |
 | --------- | -------- |
-| DB Read   | XX ms    |
-| Redis HIT | XX ms    |
+| DB Read   | 360 ms    |
+| Redis HIT | 13 ms    |
 
 ---
 
