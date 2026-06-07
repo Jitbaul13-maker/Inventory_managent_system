@@ -75,11 +75,12 @@ public class InventoryService {
     }
 
     public GetInvDTO getInv(int pid){
-        String key = "v1:" + keyHelper() + pid;
+        String key = keyHelper() + "json:" + pid;
 
         Object cached = invCache
                         .opsForValue()
                         .get(key);
+
         if(cached instanceof GetInvDTO dto){
             log.info("Hit -> {}",key);
             return dto;
@@ -114,13 +115,12 @@ public class InventoryService {
             throw new ResourceNotFoundException("Insufficient stock!");
         }
 
-        String key = "v2:" + keyHelper() + pid;
+        String key = keyHelper() + "hash:" + pid;
 
         HashOperations<String, Object, Object> hash = invCache.opsForHash();
 
         if(!Boolean.TRUE.equals(invCache.hasKey(key))){
             hash.put(key, "availableQuantity", inv.getAvailableQuantity());
-
             hash.put(key, "reservedQuantity", inv.getReservedQuantity());
         }
 
@@ -143,7 +143,7 @@ public class InventoryService {
             throw  new ResourceNotFoundException("Insufficient stock!");
         }
 
-        String key = "v2:" + keyHelper() + pid;
+        String key = keyHelper() + "hash:" + pid;
 
         HashOperations<String, Object, Object> hash = invCache.opsForHash();
 
