@@ -1,6 +1,6 @@
 # Inventory Management Backend
 
-Backend REST API for managing products and inventory with Redis caching, PostgreSQL persistence, validation, exception handling, and Dockerized deployment.
+Backend REST API for managing products and inventory using Spring Boot, PostgreSQL, Redis caching, reservation workflows, validation, exception handling, and Dockerized deployment.
 
 ---
 
@@ -12,29 +12,40 @@ Backend REST API for managing products and inventory with Redis caching, Postgre
 * Get product by ID
 * Update product
 * DTO validation
-* Exception handling
+* Global exception handling
+* Redis-backed product caching
 
 ### Inventory Management
 
 * Create inventory for product
 * Get inventory by product
-* Update inventory quantities
-* Validation for inventory rules
+* Reserve inventory
+* Release inventory
+* Inventory business validation
 
 ### Redis Caching
 
-* Manual caching using `RedisTemplate`
-* Cache-aside strategy
-* Manual cache invalidation
+#### Product Cache
+
+* Spring Cache abstraction
+* `@Cacheable`
+* `@CacheEvict`
 * TTL based expiration
+
+#### Inventory Cache
+
+* Manual caching using `RedisTemplate`
+* Cache-aside reads
+* Write-through updates
 * JSON serialization
+* Versioned Redis keys
 
 ### Infrastructure
 
 * PostgreSQL database
 * Dockerized deployment
-* Centralized logging
-* Global exception handling
+* Layered architecture
+* DTO-driven API design
 
 ---
 
@@ -53,6 +64,7 @@ Backend REST API for managing products and inventory with Redis caching, Postgre
 ### Cache
 
 * Redis
+* RedisTemplate
 
 ### DevOps
 
@@ -66,50 +78,57 @@ Backend REST API for managing products and inventory with Redis caching, Postgre
 
 ---
 
-## Architecture
+# Architecture
 
 ```text
 Client
-   ↓
+ ↓
 Controller
-   ↓
+ ↓
 Service
-   ↓
+ ↓
 Redis Cache
-   ↓ (MISS)
+ ↓ HIT
+Return
+
+OR
+
+MISS
+ ↓
 PostgreSQL
-   ↓
-Redis Populate
-   ↓
+ ↓
+Populate Cache
+ ↓
 Response
 ```
-## Screenshots
 
-### Application Running
+---
+
+# Screenshots
+
+## Application Running
 
 Example:
 
 ```text
-docker compose ps
+docker compose up --build
 ```
-
 Image:
 
 ![Docker Running](docs/screenshots/docker-running.png)
 
 ---
 
-### Redis Cache Logs
+## Redis Cache Logs
 
-Example logs:
+Example:
 
 ```text
-CACHE MISS → products:inventory:1
-CACHE SET → products:inventory:1
+CACHE MISS
+CACHE SET
 
-CACHE HIT → products:inventory:1
+CACHE HIT
 
-CACHE EVICT → products:inventory:1
 ```
 
 Image:
@@ -118,14 +137,31 @@ Image:
 
 ---
 
-### Redis Stored Data
+## Redis Keys
 
 Example:
 
 ```text
 KEYS *
 
-GET product:inventory:1
+v1:products:inventory:1
+v2:products:inventory:1
+```
+
+Image:
+
+```text
+docs/screenshots/redis-keys.png
+```
+
+---
+
+## Redis Stored Data
+
+Example:
+
+```text
+GET v2:products:inventory:1
 ```
 
 Image:
@@ -134,12 +170,13 @@ Image:
 
 ---
 
-### API Testing
+## API Testing
 
 Include:
 
 * GET inventory
-* PATCH inventory
+* POST reserve
+* POST release
 * Response body
 
 Image:
@@ -148,14 +185,18 @@ Image:
 
 ---
 
-### Benchmark Results
-
-Example:
+## Benchmark Results
 
 | Scenario  | Avg Time |
 | --------- | -------- |
-| DB Read   | 360 ms    |
-| Redis HIT | 13 ms    |
+| DB Read   | ~360 ms  |
+| Redis HIT | ~13 ms   |
+
+Approximate read improvement:
+
+```text
+~27× faster
+```
 
 ---
 
@@ -196,11 +237,11 @@ Return
 
 OR
 
-Redis
-↓ MISS
+MISS
+↓
 Database
 ↓
-Cache
+Populate Cache
 ↓
 Return
 ```
@@ -218,7 +259,7 @@ Flow:
 ```text
 Update DB
 ↓
-Delete Redis Cache
+Evict Cache
 ↓
 Next GET rebuilds cache
 ```
@@ -245,7 +286,7 @@ Request:
 Validation:
 
 ```text
-reservedQuantity ≤ availableQuantity
+reservedQuantity <= availableQuantity
 ```
 
 ---
@@ -269,40 +310,86 @@ MISS
 ↓
 Database
 ↓
-Store Redis
+Store Cache
 ↓
 Return
 ```
 
-Cache key:
+Cache Key:
 
 ```text
-products:inventory:{pid}
+v2:products:inventory:{pid}
 ```
 
 ---
 
-### Update Inventory
+### Reserve Inventory
 
 ```http
-PATCH /products/{pid}/inventory
+POST /products/{pid}/inventory/reserve
 ```
 
 Flow:
 
 ```text
+Read Inventory
+↓
+Validate Availability
+↓
 Update Database
 ↓
-Delete Cache
+Update Redis
 ↓
-Next GET refreshes cache
+Return
+```
+
+---
+
+### Release Inventory
+
+```http
+POST /products/{pid}/inventory/release
+```
+
+Flow:
+
+```text
+Read Inventory
+↓
+Restore Inventory
+↓
+Update Database
+↓
+Update Redis
+↓
+Return
 ```
 
 ---
 
 # Redis Design
 
-## Cache Strategy
+## Key Versioning
+
+Redis keys use version prefixes.
+
+Example:
+
+```text
+v1:products:inventory:{pid}
+v2:products:inventory:{pid}
+```
+
+Benefits:
+
+* Avoid cache collisions
+* Support cache schema evolution
+* Enable safe migration
+* Allow gradual rollout
+
+---
+
+## Read Strategy
 
 Cache Aside Pattern
 
@@ -322,14 +409,18 @@ Return
 
 ---
 
-## Cache Invalidation
+## Write Strategy
+
+Write Through Cache
 
 ```text
-PATCH
+WRITE
 ↓
-Update DB
+Update Database
 ↓
-Delete Cache
+Update Redis
+↓
+Return
 ```
 
 ---
@@ -373,10 +464,10 @@ Application logs include:
 CACHE HIT
 CACHE MISS
 CACHE SET
-CACHE EVICT
+WRITE THROUGH UPDATE
 ```
 
-Logs can be viewed using:
+View logs:
 
 ```bash
 docker compose logs -f app
@@ -389,7 +480,7 @@ docker compose logs -f app
 Clone repository:
 
 ```bash
-git clone <https://github.com/Jitbaul13-maker/Inventory_managent_system/>
+git clone https://github.com/Jitbaul13-maker/Inventory_managent_system.git
 ```
 
 Start containers:
@@ -409,8 +500,8 @@ http://localhost:8080
 # Future Improvements
 
 * Redis Hash based inventory updates
-* Benchmark cache performance
-* Authentication & Authorization
+* JWT Authentication
+* Role Based Access Control
 * Monitoring and metrics
 * CI/CD pipeline
 
@@ -421,9 +512,10 @@ http://localhost:8080
 Through this project:
 
 * Built REST APIs using Spring Boot
+* Implemented cache-aside strategy
+* Implemented write-through caching
 * Designed DTO driven architecture
-* Implemented Redis cache-aside pattern
-* Configured JSON serialization
-* Implemented cache invalidation
-* Containerized application using Docker
-* Improved observability through logging
+* Configured Redis serialization
+* Implemented cache versioning
+* Containerized services with Docker
+* Improved application performance
