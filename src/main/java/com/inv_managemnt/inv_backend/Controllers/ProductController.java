@@ -2,6 +2,7 @@ package com.inv_managemnt.inv_backend.Controllers;
 
 import com.inv_managemnt.inv_backend.dtos.CreateProductDTO;
 import com.inv_managemnt.inv_backend.dtos.GetProductDTO;
+import com.inv_managemnt.inv_backend.dtos.UpdateProductDTO;
 import com.inv_managemnt.inv_backend.services.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -26,5 +27,11 @@ public class ProductController {
     public ResponseEntity<GetProductDTO> createProd(@Valid @RequestBody CreateProductDTO dto){
         GetProductDTO prod = service.createProd(dto);
         return ResponseEntity.ok().body(prod);
+    }
+
+    @PatchMapping("/products/{pid}")
+    public ResponseEntity<GetProductDTO> updateProd(@Valid @RequestBody UpdateProductDTO dto,
+                                                    @PathVariable int pid){
+        return ResponseEntity.ok(service.updateProd(pid,dto));
     }
 }
