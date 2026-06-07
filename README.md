@@ -150,9 +150,7 @@ products:inventory:hash:1
 
 Image:
 
-```text
-docs/screenshots/redis-keys.png
-```
+![Redis Keys](docs/screenshots/redis-keys.png)
 
 ---
 
