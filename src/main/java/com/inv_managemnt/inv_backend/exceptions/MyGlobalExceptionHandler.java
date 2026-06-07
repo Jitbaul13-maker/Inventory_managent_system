@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class MyGlobalExceptionHandler {
 
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> prodNotFound(ProductNotFoundException ex){
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> prodNotFound(ResourceNotFoundException ex){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponseDTO(
                 LocalDateTime.now(),
                 404,
@@ -21,12 +21,12 @@ public class MyGlobalExceptionHandler {
         ));
     }
 
-    @ExceptionHandler(InventoryNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> invNotFound(InventoryNotFoundException ex){
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponseDTO(
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDTO> invNotFound(ResourceAlreadyExistsException ex){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponseDTO(
                 LocalDateTime.now(),
-                404,
-                "Not found",
+                409,
+                "Conflict",
                 ex.getMessage()
         ));
     }

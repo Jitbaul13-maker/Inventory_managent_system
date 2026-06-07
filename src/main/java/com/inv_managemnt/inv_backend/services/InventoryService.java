@@ -3,7 +3,8 @@ package com.inv_managemnt.inv_backend.services;
 import com.inv_managemnt.inv_backend.dtos.CreateInvDTO;
 import com.inv_managemnt.inv_backend.dtos.GetInvDTO;
 import com.inv_managemnt.inv_backend.dtos.UpdateInvDTO;
-import com.inv_managemnt.inv_backend.exceptions.ProductNotFoundException;
+import com.inv_managemnt.inv_backend.exceptions.ResourceAlreadyExistsException;
+import com.inv_managemnt.inv_backend.exceptions.ResourceNotFoundException;
 import com.inv_managemnt.inv_backend.models.Inventory;
 import com.inv_managemnt.inv_backend.models.Product;
 import com.inv_managemnt.inv_backend.repos.InventoryRepo;
@@ -50,10 +51,10 @@ public class InventoryService {
 
         Product p = productRepo
                 .findById(pid)
-                .orElseThrow(() -> new ProductNotFoundException("No Product found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("No Product found!"));
 
         if(invRepo.existsByProductPid(pid)){
-            throw new RuntimeException("Inventory already exists");
+            throw new ResourceAlreadyExistsException("Inventory already exists");
         }
 
         if (dto.getReservedQuantity() <= dto.getAvailableQuantity()){
@@ -67,7 +68,7 @@ public class InventoryService {
             return new GetInvDTO(inv.getAvailableQuantity(), inv.getReservedQuantity());
 
         } else {
-            throw new RuntimeException("Reserved quantity can not be more that available quantity");
+            throw new ResourceAlreadyExistsException("Reserved quantity can not be more that available quantity");
         }
     }
 
@@ -86,7 +87,7 @@ public class InventoryService {
 
         Inventory inv = invRepo
                 .findByProductPid(pid)
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("No Inventory found!"));
 
         GetInvDTO dto = new GetInvDTO(inv.getAvailableQuantity(), inv.getReservedQuantity());
 
@@ -104,7 +105,7 @@ public class InventoryService {
 
     public GetInvDTO updateInv(UpdateInvDTO dto, int pid){
 
-        Inventory inv = invRepo.findByProductPid(pid).orElseThrow(() -> new RuntimeException("No inv found!"));
+        Inventory inv = invRepo.findByProductPid(pid).orElseThrow(() -> new ResourceNotFoundException("No inv found!"));
 
         if (dto.getReservedQuantity() <= dto.getAvailableQuantity()) {
 
@@ -114,6 +115,7 @@ public class InventoryService {
             inv.setReservedQuantity(dto.getReservedQuantity());
 
             invCache.delete(key);
+            log.info("Evict -> {}", key);
 
             return new GetInvDTO(inv.getAvailableQuantity(), inv.getReservedQuantity());
 
