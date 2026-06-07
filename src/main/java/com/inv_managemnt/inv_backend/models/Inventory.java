@@ -48,4 +48,7 @@ public class Inventory {
             unique = true
     )
     private Product product;
+
+    @Version
+    private Integer version = 0;
 }

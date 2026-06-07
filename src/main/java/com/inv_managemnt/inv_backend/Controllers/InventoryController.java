@@ -28,9 +28,15 @@ public class InventoryController {
         return ResponseEntity.ok(service.createInv(dto, pid));
     }
 
-    @PatchMapping("products/{pid}/inventory")
-    public ResponseEntity<GetInvDTO> updateInv(@Valid @RequestBody UpdateInvDTO dto,
-                                               @PathVariable("pid") int pid){
-        return ResponseEntity.ok(service.updateInv(dto, pid));
+    @PatchMapping("products/{pid}/inventory/reserve")
+    public ResponseEntity<GetInvDTO> reserveInv(@PathVariable("pid") int pid,
+                                        @RequestParam("qty") int qty) {
+        return ResponseEntity.ok(service.reserveInv(pid, qty));
+    }
+
+    @PatchMapping("products/{pid}/inventory/release")
+    public ResponseEntity<GetInvDTO> releaseInv(@PathVariable("pid") int pid,
+                                                @RequestParam("qty") int qty) {
+        return ResponseEntity.ok(service.releaseInv(pid, qty));
     }
 }

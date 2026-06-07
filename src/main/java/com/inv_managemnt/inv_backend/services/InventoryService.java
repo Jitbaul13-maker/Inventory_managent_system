@@ -10,9 +10,11 @@ import com.inv_managemnt.inv_backend.models.Product;
 import com.inv_managemnt.inv_backend.repos.InventoryRepo;
 import com.inv_managemnt.inv_backend.repos.ProductRepo;
 import jakarta.transaction.Transactional;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -73,7 +75,7 @@ public class InventoryService {
     }
 
     public GetInvDTO getInv(int pid){
-        String key = keyHelper() + pid;
+        String key = "v1:" + keyHelper() + pid;
 
         Object cached = invCache
                         .opsForValue()
@@ -103,24 +105,61 @@ public class InventoryService {
         return dto;
     }
 
-    public GetInvDTO updateInv(UpdateInvDTO dto, int pid){
+    public GetInvDTO reserveInv(int pid, int qty) {
 
-        Inventory inv = invRepo.findByProductPid(pid).orElseThrow(() -> new ResourceNotFoundException("No inv found!"));
+        Inventory inv = invRepo.findByProductPid(pid)
+                .orElseThrow(()-> new ResourceNotFoundException("No valid inventory!"));
 
-        if (dto.getReservedQuantity() <= dto.getAvailableQuantity()) {
-
-            String key = keyHelper() + pid;
-
-            inv.setAvailableQuantity(dto.getAvailableQuantity());
-            inv.setReservedQuantity(dto.getReservedQuantity());
-
-            invCache.delete(key);
-            log.info("Evict -> {}", key);
-
-            return new GetInvDTO(inv.getAvailableQuantity(), inv.getReservedQuantity());
-
-        } else {
-            throw new RuntimeException("Reserved quantity can not be more that available quantity");
+        if (inv.getAvailableQuantity() < qty){
+            throw new ResourceNotFoundException("Insufficient stock!");
         }
+
+        String key = "v2:" + keyHelper() + pid;
+
+        HashOperations<String, Object, Object> hash = invCache.opsForHash();
+
+        if(!Boolean.TRUE.equals(invCache.hasKey(key))){
+            hash.put(key, "availableQuantity", inv.getAvailableQuantity());
+
+            hash.put(key, "reservedQuantity", inv.getReservedQuantity());
+        }
+
+        Long remaining = hash.increment(key, "availableQuantity", -qty);
+        hash.increment(key, "reservedQuantity", qty);
+
+        inv.setAvailableQuantity(remaining.intValue());
+        inv.setReservedQuantity(inv.getReservedQuantity() + qty);
+
+        invCache.expire(key, Duration.ofMinutes(2));
+
+        return new GetInvDTO( inv.getAvailableQuantity(), inv.getReservedQuantity());
+    }
+
+    public GetInvDTO releaseInv(int pid, int qty) {
+        Inventory inv = invRepo.findByProductPid(pid)
+                .orElseThrow(()-> new ResourceNotFoundException("No valid inventory!"));
+
+        if (inv.getAvailableQuantity() < qty){
+            throw  new ResourceNotFoundException("Insufficient stock!");
+        }
+
+        String key = "v2:" + keyHelper() + pid;
+
+        HashOperations<String, Object, Object> hash = invCache.opsForHash();
+
+        if(!Boolean.TRUE.equals(invCache.hasKey(key))){
+            hash.put(key, "availableQuantity", inv.getAvailableQuantity());
+            hash.put(key, "reservedQuantity", inv.getReservedQuantity());
+        }
+
+        Long remaining = hash.increment(key, "reservedQuantity", -qty);
+        hash.increment(key, "availableQuantity", qty);
+
+        inv.setAvailableQuantity(inv.getAvailableQuantity()+qty);
+        inv.setReservedQuantity(remaining.intValue());
+
+        invCache.expire(key, Duration.ofMinutes(2));
+
+        return new GetInvDTO( inv.getAvailableQuantity(), inv.getReservedQuantity());
     }
 }
