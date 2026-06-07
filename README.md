@@ -157,10 +157,6 @@ Example:
 | DB Read   | XX ms    |
 | Redis HIT | XX ms    |
 
-Image:
-
-![Benchmark Results](docs/screenshots/benchmark.png)
-
 ---
 
 # API Endpoints
