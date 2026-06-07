@@ -12,7 +12,17 @@ import java.time.LocalDateTime;
 public class MyGlobalExceptionHandler {
 
     @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> productNotFound(ProductNotFoundException ex){
+    public ResponseEntity<ErrorResponseDTO> prodNotFound(ProductNotFoundException ex){
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponseDTO(
+                LocalDateTime.now(),
+                404,
+                "Not found",
+                ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(InventoryNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> invNotFound(InventoryNotFoundException ex){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponseDTO(
                 LocalDateTime.now(),
                 404,

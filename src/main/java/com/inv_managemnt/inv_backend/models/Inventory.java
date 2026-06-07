@@ -1,6 +1,7 @@
 package com.inv_managemnt.inv_backend.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,7 +9,6 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,28 +16,18 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Product {
+public class Inventory {
 
     @Id
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
-            generator = "product_seq"
-    )
+            generator = "inv_seq_gen")
     @SequenceGenerator(
-            name = "product_seq",
-            sequenceName = "product_seq",
+            name = "inv_seq_gen",
+            sequenceName = "inv_seq_gen",
             allocationSize = 1
     )
-    private Integer pid;
-
-    @Column(nullable = false, unique = true)
-    private String sku;
-
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
+    private Integer iid;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -45,6 +35,17 @@ public class Product {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private Integer availableQuantity = 0;
+
+    @Column(nullable = false)
+    private Integer reservedQuantity = 0;
+
     @OneToOne
-    private Inventory inv;
+    @JoinColumn(
+            name = "pid",
+            nullable = false,
+            unique = true
+    )
+    private Product product;
 }

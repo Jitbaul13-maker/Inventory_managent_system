@@ -1,0 +1,17 @@
+package com.inv_managemnt.inv_backend.dtos;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class GetInvDTO {
+
+    private Integer availableQuantity = 0;
+
+    private Integer reservedQuantity = 0;
+}
