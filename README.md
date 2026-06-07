@@ -95,9 +95,7 @@ docker compose ps
 
 Image:
 
-```text
 ![Docker Running](docs/screenshots/docker-running.png)
-```
 
 ---
 
@@ -116,9 +114,7 @@ CACHE EVICT → products:inventory:1
 
 Image:
 
-```text
 ![Cache Logs](docs/screenshots/cache-logs.png)
-```
 
 ---
 
@@ -134,9 +130,7 @@ GET product:inventory:1
 
 Image:
 
-```text
 ![Redis Cache](docs/screenshots/redis-cache.png)
-```
 
 ---
 
@@ -150,9 +144,7 @@ Include:
 
 Image:
 
-```text
 ![Postman API](docs/screenshots/postman-api.png)
-```
 
 ---
 
@@ -167,10 +159,7 @@ Example:
 
 Image:
 
-```text
 ![Benchmark Results](docs/screenshots/benchmark.png)
-```
-
 
 ---
 
