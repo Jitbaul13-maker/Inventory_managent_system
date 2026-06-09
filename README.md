@@ -135,25 +135,6 @@ Image:
 
 ![Cache Logs](docs/screenshots/cache-logs.png)
 
----
-
-## Redis Keys
-
-Example:
-
-```text
-KEYS *
-
-products:inventory:json:1
-products:inventory:hash:1
-```
-
-Image:
-
-![Redis Keys](docs/screenshots/redis-keys.png)
-
----
-
 ## Redis Stored Data
 
 Example:
@@ -366,26 +347,6 @@ Return
 ---
 
 # Redis Design
-
-## Key Separators
-
-Redis keys use data type based separators.
-
-Example:
-
-```text
-products:inventory:json:{pid}
-products:inventory:hash:{pid}
-```
-
-Benefits:
-
-* Avoid cache collisions
-* Support cache schema evolution
-* Enable safe migration
-* Allow gradual rollout
-
----
 
 ## Read Strategy
 
